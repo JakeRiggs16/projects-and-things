@@ -1,0 +1,404 @@
+#ifndef SOME_FUNC
+#define SOME_FUNC
+
+#include <sstream>
+using std::ostringstream;
+using std::istringstream;
+#include <string>
+using std::string;
+#include <vector>
+using std::vector;
+#include <iomanip>
+
+#include<iostream>
+using std::cout;
+using std::endl;
+
+//variable init
+double balance = 0;
+int year = 0;
+int month = 0;
+int day = 0;
+
+//split function from lecture video
+void split(const string&s,vector<string> &elems, const char sep) {
+  istringstream iss(s);
+  string item;
+  while(getline(iss,item,sep)) {
+    elems.push_back(item);
+  }
+}
+
+//deposit function adding amount to balance
+void deposit(double &balance, const double amount) {
+    balance += amount;
+}
+
+//withdraw function that withdraws money if the balance is larger than amount
+//returns false if its an overdraft
+bool withdraw(double &balance, const double amount) {
+    if (balance >= amount) {
+        balance -= amount;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+//overdraft function that applies overdraft fee if balance is less than amount
+//updates the balance with 2 decimal place rounding
+void overdraft(double &balance, const double amount) {
+    if (balance < amount) {
+        balance -= amount;
+        balance -= 35;
+        std::stringstream tmp;
+        tmp << std::setprecision(2) << std::fixed << balance; //rounding
+        balance = std::stod(tmp.str());
+        tmp.str(string()); //clear string
+    } else {
+        balance -= amount;
+        balance -= 35;
+        std::stringstream tmp;
+        tmp << std::setprecision(2) << std::fixed << balance; //rounding
+        balance = std::stod(tmp.str());
+        tmp.str(string()); //clear string
+    }
+}
+
+//interest for month calculates interest earned from balance for a month
+double interest_for_month(double &balance, const double apr) {
+    double interest_month = (((apr/100)/12)*balance); //calc
+    string apr_str = std::to_string(interest_month);
+    interest_month = std::stod(apr_str.substr(0,4)); //truncates the interest
+    return interest_month;
+}
+
+//string date to int ptrs takes in date and pointers to assign a new date
+void string_date_to_int_ptrs(string date, int *year, int *month, int *day) {
+    vector<string> fields;
+    split(date,fields,'-');
+    int year_int = 0;
+    int month_int = 0;
+    int day_int = 0;
+    year_int = std::stoi(fields[0]); //assigns year ptr to year
+    *year = year_int;
+    if (fields[1][0] == '0') {
+        fields[1].erase(0,1);
+        month_int = std::stoi(fields[1]); //removes 0 if month is single digit
+        *month = month_int;
+    } else {
+        month_int = std::stoi(fields[1]); //assigns month ptr to month
+        *month = month_int;
+    }
+    if (fields[2][0] == '0') {
+        fields[2].erase(0,1);
+        day_int = std::stoi(fields[2]); //removes 0 if day is single digit
+        *day = day_int;
+    } else {
+        day_int = std::stoi(fields[2]); //assigns day ptr to day
+        *day = day_int;
+    }
+}
+
+//string date to ints takes in date and references to assign a new date 
+void string_date_to_ints(string date, int &year, int &month, int &day) {
+    vector<string> fields;
+    split(date,fields,'-');
+    int year_int = 0;
+    int month_int = 0;
+    int day_int = 0;
+    std::stringstream yearr(fields[0]); //assigns year ref to year
+    yearr >> year_int;
+    year = year_int;
+    if (fields[1][0] == '0') {
+        fields[1].erase(0,1);
+        std::stringstream monthh(fields[1]); //removes 0 if month is single digit
+        monthh >> month_int;
+        month = month_int;
+    } else {
+        std::stringstream monthh(fields[1]); //assigns month ref to month 
+        monthh >> month_int;
+        month = month_int;
+    }
+    if (fields[2][0] == '0') {
+        fields[2].erase(0,1);
+        std::stringstream dayy(fields[2]); //removes 0 if day is single digit
+        dayy >> day_int;
+        day = day_int;
+    } else {
+        std::stringstream dayy(fields[2]); //assigns day ref to day 
+        dayy >> day_int;
+        day = day_int;
+    }
+}
+
+//number of first of months takes in two dates to calculate how many first of months
+// there are in between the dates
+int number_of_first_of_months(string date_early,string date_late) {
+    vector<string> fields;
+    vector<string> fields_late;
+    split(date_early,fields,'-');
+    split(date_late,fields_late,'-');
+    int year_int_early = 0;
+    int month_int_early = 0;
+    int day_int_early = 0;
+    int year_int_late = 0;
+    int month_int_late = 0;
+    int day_int_late = 0;
+    //first assigns early date string to the early date variables
+    std::stringstream yearr(fields[0]); //assigns year
+    yearr >> year_int_early;
+    if (fields[1][0] == '0') {
+        fields[1].erase(0,1);
+        std::stringstream monthh(fields[1]); //removes 0 if month is single digit
+        monthh >> month_int_early;
+    } else {
+        std::stringstream monthh(fields[1]); //assigns month
+        monthh >> month_int_early;
+    }
+    if (fields[2][0] == '0') {
+        fields[2].erase(0,1);
+        std::stringstream dayy(fields[2]); //removes 0 if day is single digit
+        dayy >> day_int_early;
+    } else {
+        std::stringstream dayy(fields[2]); //assigns day
+        dayy >> day_int_early;
+    }
+    //assigns late date string to late date variables
+    std::stringstream yearrr(fields_late[0]);
+    yearrr >> year_int_late;
+    if (fields_late[1][0] == '0') {
+        fields_late[1].erase(0,1);
+        std::stringstream monthhh(fields_late[1]); //removes 0 if month is single digit
+        monthhh >> month_int_late;
+    } else {
+        std::stringstream monthhh(fields_late[1]); //assigns month
+        monthhh >> month_int_late;
+    }
+    if (fields_late[2][0] == '0') {
+        fields_late[2].erase(0,1);
+        std::stringstream dayyy(fields_late[2]); //removes 0 if day is single digit
+        dayyy >> day_int_late;
+    } else {
+        std::stringstream dayyy(fields_late[2]); //assigns day
+        dayyy >> day_int_late;
+    }
+    //checks if dates are same
+    if (date_early==date_late) {
+        return 0;
+    } else if (year_int_early==year_int_late && month_int_early==month_int_late) {
+        //checks if year and month are same
+        return 0;
+    } else if (year_int_early==year_int_late && month_int_late < month_int_early) {
+        //checks if late date is earlier than early date
+        return 0;
+    } else if (year_int_early == year_int_late) {
+        //checks if year is same only
+        return month_int_late-month_int_early;
+    } else if (year_int_late < year_int_early) {
+        //checks if late year is earlier than early year
+        return 0;
+    } else {
+        //normal date calculation for diff years numerical order
+        return (((year_int_late-1-year_int_early)*12)+(12-month_int_early)+(month_int_late));
+    }
+}
+
+//interest earned calculates the total interest earned over a span of time
+//takes in early and late dates as well as reference to balance and the annual percentage rating
+double interest_earned(double &balance,const double apr,string date_early,string date_late) {
+    double interest_total = 0;
+    int first_of = number_of_first_of_months(date_early,date_late);
+    //calculate how many months
+    if (balance < 0) {
+        //return no interest earned if balance starts negative
+        return 0.00;
+    } else {
+        //calculates interest earned similar to interest per month function but truncates here properly
+        for (int i = 0;i < first_of; i++) {
+            double interest_month = 0;
+            interest_month = (((apr/100)/12)*balance);
+            string apr_str = std::to_string(interest_month);
+            interest_month = std::stod(apr_str.substr(0,apr_str.find('.') + 3)); //truncate fractions
+            interest_total += interest_month;
+            if (first_of != 1) {
+                //interest added if length of time is more than 1 month
+                string apr_str = std::to_string(interest_month);
+                interest_month = std::stod(apr_str.substr(0,apr_str.find('.') + 3));
+                balance += interest_month;
+            }
+        }
+        //truncates again and returns interest earned
+        string apr_str = std::to_string(interest_total);
+        interest_total = std::stod(apr_str.substr(0,apr_str.find('.') + 3));
+        return interest_total;
+    }
+}
+
+//process command deals with string line and figures out if it should deposit or Withdraw
+//this is one of the main functions that deals with all problems
+string process_command(string &line, string &previous_date, double &balance, const double apr) {
+    vector<string> info;
+    split(line,info,' ');
+    //situation for if balance is positive
+    if (balance > 0) {
+        if (info[1] == "Deposit") {
+            info[2].erase(0,1);
+            double amount = std::stod(info[2]);
+        if (previous_date == "") {
+            // no previous date
+            previous_date = info[0];
+        }
+        //check number of first of month,calculate interest,deposit
+        int accrued = number_of_first_of_months(previous_date,info[0]);
+        double interest_earn = interest_earned(balance,apr,previous_date,info[0]);
+        deposit(balance, amount);
+        //if there is interest earned, return this ostringstream in this format
+        if (interest_earn != 0) {
+            ostringstream oss;
+            oss << std::setprecision(2);
+            oss << std::fixed;
+            oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Since " << previous_date << ", interest has accrued " << accrued << " times." << endl << "$" << interest_earn << " interest has been earned." << endl << "Balance: " << balance << endl;
+            previous_date = info[0];
+            //set previous date to new date
+            return oss.str();
+        } else {
+            //if there is no interest earned, return this ostringstream in this format
+            ostringstream oss;
+            oss << std::setprecision(2);
+            oss << std::fixed;
+            oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Balance: " << balance << endl;
+            previous_date = info[0];
+            //set previous date to new date
+            return oss.str();
+        }
+        //make sure previous date is set to new date
+        previous_date = info[0];
+        } else if (info[1] == "Withdraw") {
+            //if not a deposit situation, its a withdraw situation
+            info[2].erase(0,1);
+            double amount = std::stod(info[2]);
+            if (balance >= amount) {
+                //if balance is greater than amount,do a basic withdraw
+                double interest_earn = interest_earned(balance,apr,previous_date,info[0]);
+                withdraw(balance,amount);
+                ostringstream oss;
+                oss << std::setprecision(2);
+                oss << std::fixed;
+                oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Balance: " << balance << endl;
+                //set previous date to new
+                previous_date = info[0];
+                return oss.str();
+            } else {
+                //if balance is less than amount, overdraft situation
+                //calculate interest because it was originally positive
+                int accrued = number_of_first_of_months(previous_date,info[0]);
+                double interest_earn = interest_earned(balance,apr,previous_date,info[0]);
+                overdraft(balance,amount);
+                ostringstream oss;
+                oss << std::setprecision(2);
+                oss << std::fixed;
+                if (accrued != 0) {
+                    //if interest did accrue,return this ostringstream in this format
+                    oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Since " << previous_date << ", interest has accrued " << accrued << " times." << endl << "$" << interest_earn << " interest has been earned." << endl << "Overdraft!" << endl << "Balance: " << balance << endl;
+                    previous_date = info[0];
+                    return oss.str();
+                } else {
+                    //if interest did not accrue, return in this format
+                    oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Overdraft!" << endl << "Balance: " << balance << endl;
+                    previous_date = info[0];
+                    return oss.str();
+                }
+            }
+        }
+    } else {
+        //if balance is negative, this will be the situation
+        if (info[1] == "Deposit") {
+            //if deposit situation,start this
+            info[2].erase(0,1);
+            double amount = std::stod(info[2]);
+        if (previous_date == "") {
+            //if no previous date,set to new
+            previous_date = info[0];
+        }
+        //check how many first of months and calculate interest
+        int accrued = number_of_first_of_months(previous_date,info[0]);
+        double interest_earn = interest_earned(balance,apr,previous_date,info[0]);
+        deposit(balance, amount);
+        if (accrued != 0) {
+            //if interest has accrued,return this ostringstream in this format
+            ostringstream oss;
+            oss << std::setprecision(2);
+            oss << std::fixed;
+            oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Since " << previous_date << ", interest has accrued " << accrued << " times." << endl << "$" << interest_earn << " interest has been earned." << endl << "Balance: " << balance << endl;
+            previous_date = info[0];
+            //set new date
+            return oss.str();
+        } else {
+            //if no interest has accrued,return this ostringstream in this format
+            ostringstream oss;
+            oss << std::setprecision(2);
+            oss << std::fixed;
+            oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Balance: " << balance << endl;
+            previous_date = info[0];
+            //set new date
+            return oss.str();
+        }
+        } else if (info[1] == "Withdraw") {
+            //if withdraw situation/not a deposit situation, do this
+            info[2].erase(0,1);
+            double amount = std::stod(info[2]);
+            if (balance >= amount) {
+                //check if balance is greater than amount
+                //if it is, withdraw normally and return this ostringstream in this format
+                withdraw(balance,amount);
+                ostringstream oss;
+                oss << std::setprecision(2);
+                oss << std::fixed;
+                oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Balance: " << balance << endl;
+                previous_date = info[0];
+                //set new date
+                return oss.str();
+            } else {
+                //if balance is less than amount, its an overdraft situation
+                //return this ostringstream in this format
+                overdraft(balance,amount);
+                ostringstream oss;
+                oss << std::setprecision(2);
+                oss << std::fixed;
+                oss << "On " << info[0] << ": Instructed to perform \"" << info[1] << " $" << info[2] << "\"" << endl << "Overdraft!" << endl << "Balance: " << balance << endl;
+                previous_date = info[0];
+                //set new date
+                return oss.str();
+            }
+        }
+    }
+}
+
+//process commands takes in a multiline string and then does a getline sort of function so
+// process command can be called for each line
+//returns a multiline string with each action printed out
+string process_commands(string input, const double apr) {
+    //initialize variables needed
+    string temp_line = "";
+    string input_line = "";
+    string start_date = "";
+    //starts with a blank date
+    string final = "";
+    int size = static_cast<int>(input.size())-1;
+    for (int i = 0; i <= size; i++) {
+        if (input[i] != '\n') {
+            //adds each char to temporary line first
+            temp_line += input[i];
+        } else {
+            //stops adding characters if newline char is encountered
+            input_line = temp_line;
+            temp_line = "";
+            //runs the process command on the input line then adds that string to final string
+            final += process_command(input_line, start_date, balance, apr);
+        }
+    }
+    return final;
+}
+
+#endif
