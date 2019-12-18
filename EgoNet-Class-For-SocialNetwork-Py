@@ -1,0 +1,143 @@
+import Circle
+
+class EgoNet:
+    def __init__(self,ego,ego_net_features):
+        '''
+            Constructs the class. Returns nothing.
+        '''
+        self.__ego = ego #Represents the Ego node for the EgoNet. type - Node object
+        self.__social_network = {} # Represents the social network graph. type - dict where key = Node object 			        and value = list of Node objects key is connected to
+        self.__social_network[ego] = set() # Represents the social network graph. type - dict where key = Node object 			        and value = list of Node objects key is connected to
+        self.__alter_node_count = 0 # Represents the total number of alter nodes connected to our Ego
+        self.__circles = {} #Represents the circles formed in our EgoNet. type - dict where key = circle name		      and value = list of Node objects in the circle
+        self.__ego_net_features = ego_net_features # Represents the features for our Ego Net. type - dict where key = feature			           position in feature file (type - int) and value = tuple of feature name and			          feature id. This does not contain Feature objects but just strings. 
+
+
+    def get_alter_node(self,node_id):
+        '''
+            Returns the node object given a node id.
+        '''
+        for key,value in self.__social_network.items(): #loops through social network
+            if key.get_id()==node_id:   #checks if its found the id
+                return key
+        return None
+
+    def get_ego(self):
+        '''
+            Returns the ego node object.
+        '''
+        return self.__ego
+    
+    def get_circle_names(self):
+        '''
+            Finds the circle names from the circles and returns the circle names.
+        '''
+        circle_name=[]  #blank list
+        for key in self.__circles.keys():   #loop through circle names
+            circle_name.append(key) #adds circles to list
+        return circle_name
+
+    def get_circle(self, circle_name):
+        '''
+            Returns the list of node objects in the circle specified.
+        '''
+        return self.__circles[circle_name]
+    
+    def get_alters(self):
+        '''
+            Returns the alters connected to the ego.
+        '''
+        return self.__social_network[self.__ego]
+
+    def get_alter_node_count(self):
+        '''
+            Returns the count of nodes connected to ego.
+        '''
+        return self.__alter_node_count
+
+    def get_ego_net_features(self):
+        '''
+            Returns dictionary of ego net features.
+        '''
+        return self.__ego_net_features
+
+    def get_ego_net_feature(self, feature):
+        '''
+            Returns tuple of feature id and feature name.
+        '''
+        return self.__ego_net_features[feature]
+
+    def get_feature_pos(self, feature_name, feature_id):
+        '''
+            Checks to see if the feature name and feature id match a specific 
+            feature. Returns the feature.
+        '''
+        v=(feature_name,feature_id) #makes a tuple
+        for key,value in self.__ego_net_features.items():   #loops through features
+            if v==value:    #checks if tuple matches
+                return key
+        return None
+    
+    def get_alter_connections(self, alter):
+        '''
+            Returns the node objects connected to a specific alter.
+        '''
+        return self.__social_network[alter]
+    
+    def add_circle(self, circle_name, alters):
+        '''
+            Constructs a circle and adds it to the circles dictionary.
+        '''
+        self.__circles[circle_name]=Circle.Circle(circle_name,alters)
+    
+    def add_connection_between_alters(self,alter1,alter2):
+        '''
+            Checks to see if alter is in social network dictionary then adds the 
+            connection to the set of connections in the value. Returns nothing.
+        '''
+        if alter1 in self.__social_network.keys():  #checks if in dict
+            self.__social_network[alter1].add(alter2)   #adds to set
+        if alter2 in self.__social_network.keys():  #checks if in dict
+            self.__social_network[alter2].add(alter1)   #adds to set
+        if alter1 not in self.__social_network.keys():  #if not in dict
+            self.__social_network[alter1]=alter2    #create key 
+        if alter2 not in self.__social_network.keys():  #if not in dict
+            self.__social_network[alter2]=alter1   #create key
+        # add alter 1 to __socialnetwork[alter2] remember to check if it exists in dict
+        # add alter2 to _socialnetwork[alter1]
+
+    def add_alter_node(self, alter):
+        '''
+            Adds an alter to the ego's set in the social network dictionary. Also
+            adds the alter to the social network if its not already there. Returns nothing.
+        '''
+        self.__social_network[self.__ego].add(alter)    #add the alter to set 
+        if alter not in self.__social_network:  #if not in dict
+            self.__social_network[alter]=set()  #add to dict
+            self.__social_network[alter].add(self.__ego)    #add the ego to alter set
+            self.__alter_node_count+=1  #adds to node count
+        else:
+            self.__social_network[alter].add(self.__ego)    #if in then add to set
+            
+        
+        #add Ted (alter) to my social net self.__social_network[self.__ego].add(alter)
+        #add me to Ted (self) self.__social_network[alter].add(self.ego)
+        #check that Ted exists in the __social_network
+        #remember to keep count of friends self._alter_node_count
+
+    def __eq__(self,other):
+        '''True if all attributes are equal.'''
+        return (self.__ego == other.__ego)\
+            and (self.__social_network == other.__social_network) \
+            and (self.__alter_node_count == other.__alter_node_count) \
+            and (self.__circles == other.__circles) \
+            and (self.__ego_net_features == other.__ego_net_features)
+            
+    def __str__(self):
+        '''Returns a string representation for printing.'''
+        st = f"Ego: {self.__ego}\n"
+        st+= f"Social Network: {self.__social_network}\n"
+        st+= f"Circles: {self.__circles}"
+        return st
+
+    __repr__ = __str__
