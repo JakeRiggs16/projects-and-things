@@ -1,0 +1,135 @@
+#include <iostream>
+using std::endl;
+using std::cout;
+using std::cin;
+#include <cmath>
+#include <string>
+using std::string;
+using std::to_string;
+using std::getline;
+
+int get_line_sum (string ca) {
+    // take in and loop through line and change each char to int
+    int sum = 0;
+    int length = ca.length();
+    for (int i = 0; i < length; i++) { 
+        int num = int(ca[i])-48; // using char int values
+        sum += num;
+    }
+    return sum;
+}
+
+char get_next_state (string neighborhood, string &rules) {
+    // find index of a neighborhood and then apply rule if it exists
+    if (rules.find(neighborhood) != string::npos) {
+        int index = rules.find(neighborhood);
+        return rules[index+7];
+    } else {
+        return '0';
+    }
+    
+}
+
+void update_line (string &line, string &rules) {
+    // take in line and rules and then update the line if neighborhood is in rules
+    string new_line = "";
+    new_line.append(line.length(),'0');
+    // above makes a line of 0's for a basis for changes
+    int length = line.length();
+    // loop through line
+    for (int i = 0; i < length; i++) {
+        string neighbor = "";
+        // situation for wrap around first index
+        if (i == 0) {
+            neighbor += line[static_cast<int>(line.length())-2];
+            neighbor += line[static_cast<int>(line.length())-1];
+            neighbor += line[0];
+            // check if neighborhood is in rules
+            if (rules.find(neighbor) != string::npos) {
+                int index = rules.find(neighbor);
+                new_line[line.length()-1] = rules[index+7];
+                neighbor = "";
+            } else {
+                // if neighborhood is not in rules
+                neighbor = "";
+            }
+        }
+        // also do regular check non wraparound first index
+        if (i == 0) {
+            neighbor += line[0];
+            neighbor += line[1];
+            neighbor += line[2];
+            // check if neighborhood is in rules
+            if (rules.find(neighbor) != string::npos) {
+                int index = rules.find(neighbor);
+                new_line[1] = rules[index+7];
+            }
+        // situation for wrap around last index
+        } else if (i == static_cast<int>(line.length())-1) {
+            neighbor += line[i];
+            neighbor += line[0];
+            neighbor += line[1];
+            // check if neighborhood is in rules
+            if (rules.find(neighbor) != string::npos) {
+                int index = rules.find(neighbor);
+                new_line[0] = rules[index+7];
+            }
+        // situation for second to last index
+        } else if (i == static_cast<int>(line.length())-2) {
+            // does nothing since not a wrap around 
+            continue;
+          } else {
+                // situation for in between first and last index
+                neighbor += line[i];
+                neighbor += line[i+1];
+                neighbor += line[i+2];
+                // check if neighborhood is in rules
+                if (rules.find(neighbor) != string::npos) {
+                    int index = rules.find(neighbor);
+                    new_line[i+1] = rules[index+7];
+                }
+            }
+    }
+    // finally updates line to new generation
+    line = new_line;
+}
+
+string run_cellular_automata (string &rules, int &ca, string line) {
+    // take in rules, a starting line, and number of generations to output
+    // sums and generations of starting line
+    string multi_line = "";
+    // loops through number of generations to give sums and generations
+    for (int i = 1; i <= ca; i++) {
+        // following lines all add together to a multiline string
+        multi_line += line;
+        multi_line += " sum = ";
+        int sum = get_line_sum(line);
+        string s = to_string(sum);
+        multi_line += s;
+        multi_line += '\n';
+        update_line(line,rules);
+    }
+    return multi_line;
+}
+
+int main() {
+    // main function takes in input
+    // this includes starting line, rules, and number of generations
+    string rules = "";
+    string use_rules = "";
+    while (getline(cin, rules)) {
+        // stops taking in rules when period is present
+        if (rules == ".") {
+            break;
+        } else {
+            use_rules += rules;
+            use_rules += '\n';
+        }
+    }
+    int ca = 0;
+    cin >> ca;
+    string line = "";
+    cin >> line;
+    // finally runs the program as a whole here
+    cout << run_cellular_automata(use_rules, ca, line);
+}
