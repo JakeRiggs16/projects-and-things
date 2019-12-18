@@ -1,0 +1,172 @@
+#########################################################################
+#   Project - Typing Game
+#   Prompt for level
+#   while loop to keep going unless q or Q entered to quit
+#       easy mode loop
+#       medium mode loop
+#       hard mode loop
+#       if an invalid level entered, reprompt
+#   at end, print how many levels done properly
+#   also print rewards earned
+#
+#########################################################################
+import string, time
+from cse231_random import randint
+
+ALPHABET_EASY = string.ascii_letters 
+ALPHABET = string.ascii_letters + string.punctuation
+
+t1=time.time()  #tracks time
+total_count=0 #initialize total games won
+total_easy=0 #initializes games won
+total_medium=0
+total_hard=0
+reward=0 #initializes rewards
+games_played=0 #initializes amount of games played
+easy_reward_letters=0   #initializes easy rewards
+medium_reward_letters=0 #initializes medium rewards
+hard_reward_letters=0 #initializes hard rewards
+total_easy_time=0
+
+LEVEL_PROMPT = '''
+Please choose the difficulty level:
+    E(e) for Easy;
+    M(m) for Medium;
+    H(h) for Hard;
+    Hit "Enter" for Default;
+    Q(q) to quit;
+
+Level: '''
+
+choice_str=input(LEVEL_PROMPT) # prompt for a level (before your while loop)
+    
+while choice_str != 'Q' or choice_str != 'q': # main while loop starts here
+    if choice_str == "q" or choice_str == "Q": #quits program
+        break
+    elif choice_str == 'e' or choice_str == 'E' or choice_str == "": #easy mode
+        easy_games=0    #initializes easy game counter
+        games_played += 1  #adds to total games played
+        total_easy=0 #initializes games won on easy
+        t7=time.time() #initializes time taken to finish game
+        for k in range(10): #repeats this 10 times unless wrong
+            random_str=""            #initializes string back to blank
+            x=randint(3,5)
+            for i in range(x):         #generate a random string
+                index=randint(0,len(ALPHABET_EASY)-1) #gives random index range 
+                random_str += ALPHABET_EASY[index]  #adds the letters to string
+            easy_games += 1     #adds one game to counter
+            print("Level [E], game [{}]/[10]".format(easy_games))
+            print("Enter this string:",random_str)
+            t1=time.time()  #tracks time
+            input_str=input()       #prompt for user to input
+            t2=time.time()
+            t13=time.time() #timing to add to total
+            time_elapsed=(t2-t1)
+            if time_elapsed>10:
+                print("Oops! Too much time.")
+            elif input_str.lower().replace(" ","") == random_str.lower() and easy_games==10:
+                print("Good job! You spent {:4.1f} of 10 seconds entering \
+string [{}][{}]".format(time_elapsed,random_str,input_str))
+                total_count += 1
+                total_easy += 1
+                easy_reward_letters+=x
+                print("Result of this game is 10/10")
+                print("Total time for this game:{:4.1f}".format(total_easy_time))
+                break
+            elif input_str.lower().replace(" ","") == random_str.lower():
+                print("Good job! You spent {:4.1f} of 10 seconds entering \
+string [{}][{}]".format(time_elapsed,random_str,input_str))
+                total_count += 1
+                total_easy += 1
+                easy_reward_letters+=x
+                total_easy_time += time_elapsed
+            else:
+                print("Incorrect. Result of this game is {}/10.".format(total_easy))
+                t8=time.time()
+                total_time = (t8-t7)
+                print("Total time for this game: {:4.1f}".format(total_time))
+                break
+    elif choice_str == 'M' or choice_str == 'm':     #if medium mode is selected
+        medium_games=0  #initializes medium game counter
+        games_played += 1  #adds to total games played
+        total_medium=0 #initializes games won on medium
+        total_time=0 #initializes time taken to finish game
+        t9=time.time()
+        for j in range(10): #repeats 10 times unless wrong
+            random_str=""
+            y=randint(6,10)
+            for m in range(y):  #generate a random string
+                index=randint(0,len(ALPHABET)-1)  #gives random index range
+                random_str += ALPHABET[index]
+            medium_games += 1
+            print("Level [M], game [{}]/[10]".format(medium_games))
+            print("Enter this string:",random_str)
+            t3=time.time()
+            input_str=input()       #prompt for user to input
+            t4=time.time()
+            time_elapsed_med=(t4-t3)
+            if time_elapsed_med>9:
+                print("Oops! Too much time.")
+            elif input_str == random_str:
+                print("Good job! You spent {:4.1f} of 9 seconds entering \
+string [{}][{}]".format(time_elapsed_med,random_str,input_str))
+                total_count += 1
+                total_medium += 1
+                medium_reward_letters+=y
+            else:
+                print("Incorrect. Result of this game is {}/10.".format(total_medium))
+                t10=time.time()
+                total_time=(t10-t9)
+                print("Total time for this game:{:4.1f}".format(total_time))
+                break
+    elif choice_str == 'H' or choice_str == 'h':  #if hard mode is selected
+        hard_games=0    #initializes hard game counter
+        games_played += 1  #adds to total games played
+        total_hard=0 #initializes hard games won
+        total_time=0 #initializes time taken to finish game
+        t11=time.time() #starts tracking time
+        for l in range(10): #repeats 10 times unless wrong
+            random_str=""     #initializes string back to blank
+            z=randint(11,15)
+            for n in range(z):      #generate a randoms string
+                index=randint(0,len(ALPHABET))   #gives random index range
+                random_str += ALPHABET[index]   #adds letters to string
+            hard_games += 1         #adds one to game counter
+            print("Level [H], game [{}]/[10]".format(hard_games))
+            print("Enter this string:",random_str)
+            t5=time.time()
+            input_str=input()       #prompt for user to input
+            t6=time.time()
+            time_elapsed_hard=(t6-t5)
+            if time_elapsed_hard>8:
+                print("Oops! Too much time.")
+            elif input_str == random_str:
+                print("Good job! You spent {:4.1f} of 8 seconds entering \
+string [{}][{}]".format(time_elapsed_hard,random_str,input_str))
+                total_count += 1
+                total_hard += 1
+                hard_reward_letters+=z
+            else:
+                print("Incorrect. Result of this game is {}/10.".format(total_hard))
+                t12=time.time() #marks final time
+                total_time=(t12-t11)    #adds up time
+                print("Total time for this game:{:4.1f}".format(total_time))
+                break
+    else:
+        print("Difficulty level not recognized.")
+    # prompt for a level again at the end of the while loop
+    LEVEL_PROMPT = '''
+Please choose the difficulty level:
+    E(e) for Easy;
+    M(m) for Medium;
+    H(h) for Hard;
+    Hit "Enter" for Default;
+    Q(q) to quit;
+
+Level: '''
+    choice_str=input(LEVEL_PROMPT) # prompt for a level at end of while loop
+
+# output final results
+reward = (easy_reward_letters+(medium_reward_letters*2)+(hard_reward_letters*3))
+print("Your final total: {:d}/{:<d}".format(total_count,games_played*10))
+print("Your total reward: {:d}".format(reward))  
