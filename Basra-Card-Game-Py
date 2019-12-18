@@ -1,0 +1,460 @@
+'''
+    Project - Basra Card Game
+    
+    Program that simulates a game of Basra being played.
+    
+    Distribute cards function deals cards to players and table depending on round,
+    returns nothing.
+    Get card index function checks to see if card is in a list, returns index if
+    it is, returns none if not.
+    Get matching cards goes through table list to check if they match the
+    current card played. Returns the matching list.
+    Numeric card function checks the rank of the card to see if it is a number,
+    if it is, returns true. If its not numeric, returns false.
+    Remove cards function removes a list of cards from another list, returns nothing.
+    Get sum matching cards function adds up the card rank. Returns a list.
+    Sum rank function adds up the ranks of all the cards, returns the sum.
+    Jack play function plays out a round for the specific case of a jack being
+    played. Returns nothing.
+    Seven of diamonds function plays out a round for the specific case of a 
+    seven of diamonds being played. Returns nothing.
+    Play function plays out a round. Returns nothing.
+    Compute score function computes the score of the players.
+    Display table function shows the different lists of cards and their locations. 
+    Returns nothing.
+    Main function uses all other functions to simulate the game. Returns nothing.
+'''
+
+from cards import Card
+from cards import Deck
+from itertools import zip_longest,chain,combinations #for displaying the table and sum
+
+def distribute_cards(deck,p1_cards,p2_cards,t_cards,round1):
+    '''
+        Checks what round it is, deals cards to each hand and to the table
+        depending on the round number. Returns nothing.
+    '''
+    if round1==True:    #checks round
+        for j in range(4):  #deals 4 cards
+            p1_cards.append(deck.deal())
+        for k in range(4):  #deals 4
+            p2_cards.append(deck.deal())
+        for l in range(4):  #deals 4
+            t_cards.append(deck.deal())
+    else:       #if not round 1
+        for m in range(4):
+            p1_cards.append(deck.deal())
+        for n in range(4):
+            p2_cards.append(deck.deal())
+             
+
+def get_card_index(card,cards_list):
+    '''
+        Checks to see if a card is in a list, returns card index if it is,
+        returns none if not.
+    '''
+    if card in cards_list:  #checks if card is in list
+        card_index=0    #initialize
+        for i in cards_list:
+            if card==i:
+                return card_index
+            else:
+                card_index+=1   #adds to card index
+                continue
+        return card_index
+    else:
+        return None   #if card is not in list
+
+def get_matching_cards(card,t_cards):
+    '''
+        Makes a list of matching cards, returns the list.
+    '''
+    matching=[] #initialize
+    for i in t_cards:   #goes through table
+        if card.rank()==i.rank():   #checks rank
+            matching.append(i)
+        else:
+            continue
+    return matching
+
+def numeric_card(card):
+    '''
+        Checks to see if the card is numeric, returns true if it is, false if not.
+    '''
+    if card.rank()<=11: #checks rank
+        return True
+    else:
+        return False
+
+def remove_cards(cards_list,cards):
+    '''
+        Removes a list of cards from another list. Returns nothing.
+    '''
+    for i in cards: #loops through elements of cards to be removed
+        if i in cards_list: #checks if card is in list
+            cards_list.remove(i)
+
+def get_sum_matching_cards(card,t_cards):
+    '''this function return a list of cards that add up to card rank,
+    if the card is Jack, Queen or king, the function returns empty list'''
+
+    matching_sum_list=[]
+    numeric_list=[]
+
+    # make a list of the numeric cards on the table
+    if len(t_cards)>1:
+        for i in t_cards:
+            if numeric_card(i):
+                numeric_list.append(i)
+
+    # collect pairs of numeric cards that sum to card
+    if len(numeric_list) > 1:
+        # collect combinations of length 2, i.e. pairs, of cards
+        # only if the ranks of the pair sum to card's rank
+        matching_sum_pair = [seq for seq in combinations(numeric_list, 2) \
+                         if seq[0].rank() + seq[1].rank() == card.rank()]
+        # combine the list of lists into one list
+        matching_sum_list = list(chain(*matching_sum_pair))
+    
+    return matching_sum_list
+
+
+def sum_rank(cards): #optional
+    '''
+        Sums the rank of all cards in a list, returns the sum.
+    ''' 
+    Sum_rank=0  #initialize
+    for i in cards: #loops through cards
+        Sum_rank+=i.rank()  #adds to rank
+    return Sum_rank
+
+def jack_play(card,player,pile,basra,t_cards):
+    '''
+        Specific case for if a jack is played. Puts jack on table if there is
+        nothing on the table. Adds table cards to the player's hand if there
+        are cards on the table, and if there are only jacks on the table, 
+        the jack is added to the basra hand. If not only jacks, jack goes to
+        the player's pile. Returns nothing.
+    ''' 
+    jacks_on_table=0    #initialize
+    length_table=0
+    if t_cards==[]: #table is blank
+        t_cards.append(card)
+    elif t_cards!=[]:   #table not blank
+        for i in t_cards:   #loop through table and add to pile
+            pile.append(i)
+            length_table+=1
+            if i.rank()==11:    #checks to see if its a jack
+                jacks_on_table+=1
+        for j in range (len(t_cards)):  #removes cards from table
+            t_cards.pop(0)
+        if jacks_on_table==length_table:    #checks to see if table is all jacks
+            basra.append(card)
+        else:           #table goes to pile if not all jacks
+            pile.append(card)
+    player.remove(card) #takes jack from player's hand
+
+def seven_diamond_play(card,player,pile,basra,t_cards):
+    '''
+        Specific case for if a seven of diamonds is played. Returns nothing.
+    '''
+    total_value=0   #initialize
+    if t_cards==[]: #blank board case
+        t_cards.append(card)
+    elif t_cards!=[]:   #stuff on board
+        for i in t_cards:   #take cards to pile
+            pile.append(i)
+            total_value+=i.rank()   #add ranks
+        for j in range (len(t_cards)):  #clear table
+            t_cards.pop(0)
+        if total_value<=10: #check if total amount on table is <= 10
+            basra.append(card)
+        else:           #if more than 10, go to pile
+            pile.append(card)
+    player.remove(card) #takes card from hand
+
+def play(card,player,pile,basra,t_cards):
+    '''
+        Plays a round of the game without any special cases, returns nothing. 
+    '''
+    if card.rank()==11: #jack case
+        jack_play(card,player,pile,basra,t_cards)
+    elif card.rank()==7 and card.suit()==2:  #seven of diamond case
+        seven_diamond_play(card,player,pile,basra,t_cards)
+    elif card.rank()>11:    #queen or king case
+        matched_list=get_matching_cards(card,t_cards)   #checks for matches
+        if matched_list==[]:    #no matches
+            t_cards.append(card)
+        elif matched_list!=[]:  #matches actions
+            remove_cards(t_cards,matched_list)
+            for i in matched_list:
+                pile.append(i)
+            if t_cards==[]:
+                basra.append(card)
+            elif t_cards!=[]:
+                pile.append(card)
+        player.remove(card)
+    elif card.rank()<=10 and card!='7D':    #numeric card case
+        matched_list=get_matching_cards(card,t_cards)   #checks for matches
+        matched_sum_list=get_sum_matching_cards(card,t_cards)   #sum of matches
+        if matched_list!=[] or matched_sum_list!=[]:    #if matches
+            for j in matched_list:  #take matches from table
+                pile.append(j)
+            remove_cards(t_cards,matched_list)
+            if matched_sum_list!=[]:
+                for l in matched_sum_list:  #add matched sums to pile
+                    pile.append(l)
+                remove_cards(t_cards,matched_sum_list)
+            if t_cards==[]: #basra if table has nothing
+                basra.append(card)
+            if t_cards!=[]:
+                pile.append(card)
+        if matched_list==[] and matched_sum_list==[]:   #if no matches
+            t_cards.append(card)
+        player.remove(card)
+    elif t_cards==[]: #blank board
+        t_cards.append(card)
+        player.remove(card)
+
+def compute_score(p1_pile,p2_pile,basra_1,basra_2):
+    '''
+        Counts up the score of each player's pile and their basra. Returns a 
+        tuple of each player's score.
+    '''
+    p1_score=0  #initialize scores
+    p2_score=0
+    if len(p1_pile)>=27:    #if player 1 has more cards
+        p1_score+=30
+    if len(p2_pile)>=27:    #if player 2 has more cards
+        p2_score+=30
+    if len(p1_pile)==len(p2_pile):  #if card amounts are equal
+        p1_score=0
+        p2_score=0
+    for i in basra_1:   #checks basra list of player 1
+        if i.rank()<=10:    #numeric 
+            p1_score+=10
+        if i.rank()==11:    #jack
+            p1_score+=30
+        if i.rank()>11: #queen or king
+            p1_score+=20
+    for j in basra_2:   #checks basra list of player 1
+        if j.rank()<=10:    #numeric
+            p2_score+=10
+        if j.rank()==11:    #jack
+            p2_score+=30
+        if j.rank()>11: #queen or king
+            p2_score+=20
+    return (p1_score,p2_score)
+    
+        
+def display_table(t_cards,p1_cards,p2_cards): 
+    '''Display the game table.'''
+    print("\n"+36*"=")
+    print("{:^36s}".format('Player1'))
+    print(9*" ", end = ' ')
+    for card in p1_cards:
+        print("{:>3s}".format(str(card)),end = ' ')
+    print()
+    print(9*" " + " {0[0]:>3d} {0[1]:>3d} {0[2]:>3d} {0[3]:>3d}".format(range(4)))
+    table = zip_longest(*[iter(t_cards)]*4,fillvalue=0)
+    hline = "\n" + 36*"-" 
+    str_ = hline + '\n '
+    for row in table:
+        str_ += 9*" "
+        for c in range(0, 4):
+            str_ += ("{:>3s}".format(str(row[c])) \
+                     if row[c] is not 0 else ' ') +' '
+        str_ += '\n'
+    str_ += hline + '\n '
+    print (str_)
+
+    print(9*" " + " {0[0]:>3d} {0[1]:>3d} {0[2]:>3d} {0[3]:>3d}".format(range(4)))
+    print(9*" ", end = ' ')
+    for card in p2_cards:
+        print("{:>3s}".format(str(card)),end = ' ')
+    print()
+    print("{:^36s}".format('Player2'))
+    print(36*"=")
+            
+    
+def main():
+    '''main function'''
+    RULES = '''
+    Basra Card Game:
+        This game belongs to a category of card games called “fishing cards games”. 
+        Each player in turn matches a card from their hand with one (or more) of those 
+        lying face-up on the table and then takes them. 
+        If the card which the player played out does not match one of the existing cards, 
+        it stays on the table.
+    To win, you have to collect more points.'''
+    
+    print(RULES) 
+
+    p1_cards = [] # card in hands player1
+    p2_cards = [] #card in hands player2
+    t_cards = []   # card on the floor
+    p1_pile = [] # for player1
+    p2_pile = [] # for player2
+    basra_1 = []
+    basra_2 = []
+    
+    answer = input("Would you like to play? y/Y or n/N? ")   #ask if user wants to play
+    turn=''#initialize turn to nothing
+    round1=True  #initialize to round 1
+    deck=Deck()
+    card_total=52
+    change=0
+    l=1
+    while answer!='n':
+        deck.shuffle()
+        while turn!='q':
+            if card_total==0:
+                p1_score,p2_score=compute_score(p1_pile,p2_pile,basra_1,basra_2)
+                print('player 1:',p1_score)
+                print('player 2:',p2_score)
+                if p1_score>p2_score:
+                    print('Player 1 is the winner')
+                if p2_score>p1_score:
+                    print('Player 2 is the winner')
+                answer = input("Would you like to play? y/Y or n/N?")
+                if answer.lower()=='y':
+                    break
+                else:
+                    turn='q'
+                    
+            if round1==True:
+                card_total-=12
+                print('---------Start The game--------')
+                print('Dealing the cards, 4 cards for each player, 4 cards on the table')
+                print('Cards left:  {}'.format(card_total))
+                distribute_cards(deck,p1_cards,p2_cards,t_cards,round1)
+                display_table(t_cards,p1_cards,p2_cards)
+                round_turn=0
+                while round_turn<8:
+                    if change%2==0:
+                        turn=input('Player 1 turn: -> ')
+                        if int(turn)>=0 and int(turn)<len(p1_cards):
+                            turn=int(turn)
+                            play(p1_cards[turn],p1_cards,p1_pile,basra_1,t_cards)
+                            change+=1
+                            round_turn+=1
+                            display_table(t_cards,p1_cards,p2_cards)
+                            continue
+                        else:
+                            print('Please enter a valid card index, 0 <= index <= {:d}'.format(len(p1_cards)-1))
+                            continue
+                    else:
+                        turn=input('Player 2 turn: -> ')
+                        if turn=='q':
+                            l=0
+                            break
+                        if int(turn)>=0 and int(turn)<len(p2_cards):
+                            turn=int(turn)
+                            play(p2_cards[turn],p2_cards,p2_pile,basra_2,t_cards)
+                            change+=1
+                            round_turn+=1
+                            display_table(t_cards,p1_cards,p2_cards)
+                            continue
+                        else:
+                            print('Please enter a valid card index, 0 <= index <= {:d}'.format(len(p2_cards)-1))
+                            continue
+                if l==0:
+                    if turn=='q':
+                        print('Thanks for playing. See you again soon.')
+                        break
+                if t_cards!=[]:
+                    for m in t_cards:
+                        p2_pile.append(m)
+                    for n in range(len(t_cards)):
+                        t_cards.pop(0)
+                    display_table(t_cards,p1_cards,p2_cards)
+                round1=False
+                turn=''
+                continue
+                
+            else:
+                card_total-=8
+                print()
+                print('------Start new round-----')
+                print('Dealing the cards, 4 cards for each player')
+                print('Cards left:  {}'.format(card_total))
+                distribute_cards(deck,p1_cards,p2_cards,t_cards,round1)
+                display_table(t_cards,p1_cards,p2_cards)
+                round_turn=0
+                while round_turn<8:
+                    try:
+                        if turn=='q':
+                                l=0
+                                break
+                    except:
+                        l=0
+                        break
+                    if change%2==0:
+                        turn=input('Player 1 turn: -> ')
+                        try:
+                            if int(turn)>=0 and int(turn)<len(p1_cards):
+                                turn=int(turn)
+                                play(p1_cards[turn],p1_cards,p1_pile,basra_1,t_cards)
+                                change+=1
+                                round_turn+=1
+                                display_table(t_cards,p1_cards,p2_cards)
+                                continue
+                            else:
+                                print('Please enter a valid card index, 0 <= index <= {:d}'.format(len(p1_cards)-1))
+                                continue
+                        except:
+                            if turn=='q':
+                                l=0
+                                break
+                    else:
+                        turn=input('Player 2 turn: -> ')
+                        if int(turn)>=0 and int(turn)<len(p2_cards):
+                            turn=int(turn)
+                            play(p2_cards[turn],p2_cards,p2_pile,basra_2,t_cards)
+                            change+=1
+                            round_turn+=1
+                            display_table(t_cards,p1_cards,p2_cards)
+                            continue
+                        else:
+                            print('Please enter a valid card index, 0 <= index <= {:d}'.format(len(p2_cards)-1))
+                            continue
+                if l==0:
+#                    if turn.lower()=='q':
+                    print('Thanks for playing. See you again soon.')
+                    break
+                if t_cards!=[]:
+                    for m in t_cards:
+                        p2_pile.append(m)
+                    for n in range(len(t_cards)):
+                        t_cards.pop(0)
+                    display_table(t_cards,p1_cards,p2_cards)
+                continue
+
+        try:
+            if turn=='q':
+                break
+        except:
+            break
+        answer = input("Would you like to play? y/Y or n/N?")
+        if answer.lower()=='y':
+            deck.reset()
+            p1_cards.clear() # card in hands player1
+            p2_cards.clear() #card in hands player2
+            t_cards.clear()   # card on the floor
+            p1_pile.clear() # pile for player1
+            p2_pile.clear() # pile for player2
+            basra_1.clear() # basra for player1
+            basra_2.clear() #basra for player2
+            change=0
+            round1=True
+            card_total=52
+            turn=''
+            continue
+    else:
+        print('Thanks for playing. See you again soon.')
+    
+    
+      
+# main function, the program's entry point
+if __name__ == "__main__":
+    main()
