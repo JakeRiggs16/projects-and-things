@@ -1,0 +1,276 @@
+#ifndef some_func
+#define some_func
+#include <iostream>
+using std::cout;
+using std::ostream;
+#include <string>
+using std::string;
+#include <vector>
+using std::vector;
+#include <sstream>
+using std::ostringstream;
+// DO NOT MODIFY
+//
+// Node
+//
+struct Node {
+  string key{};
+  int value{};
+  Node *next = nullptr;
+  Node *prev = nullptr;
+  Node() = default;
+  Node(string, int, Node * = nullptr, Node * = nullptr);
+  bool operator==(const Node &) const;
+  friend ostream &operator<<(ostream &out, const Node &n) {
+    out << n.key << ":" << n.value;
+    return out;
+  }
+};
+
+Node::Node(string key_, int value_, Node *prev_, Node *next_) {
+  key = key_;
+  value = value_;
+  prev = prev_;
+  next = next_;
+}
+
+bool Node::operator==(const Node &n) const {
+  if ((key == n.key) && (value == n.value)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// DO NOT MODIFY
+//
+// DLL
+//
+class DLL {
+private:
+  Node *head_ = nullptr;
+  Node *tail_ = nullptr;
+  size_t sz_ = 0;
+
+public:
+  DLL() = default;
+  DLL(vector<Node>);
+  DLL(const DLL &);
+  DLL &operator=(DLL list);
+  ~DLL();
+  Node *get_head();
+  Node *get_tail();
+  size_t get_size();
+  Node add_back(string, int);
+  Node add_front(string, int);
+  Node add_after(string, string, int);
+  Node search(string);
+  Node remove_front();
+  Node remove_back();
+  Node remove_key(string);
+  int update_value(string, int);
+  friend ostream &operator<<(ostream &out, const DLL &list) {
+    auto itr = list.head_;
+    ostringstream oss;
+    for (; itr != nullptr; itr = itr->next) {
+      oss << itr->key << ":" << itr->value << ", ";
+    }
+    string ans = oss.str();
+    ans = ans.substr(0, ans.size() - 2);
+    out << ans;
+    return out;
+  }
+};
+
+Node *DLL::get_head() { return head_; }
+Node *DLL::get_tail() { return tail_; }
+size_t DLL::get_size() { return sz_; }
+
+DLL::~DLL() {
+  while (head_)
+    delete std::exchange(head_, head_->next);
+}
+
+DLL & DLL::operator =(DLL list) {
+  using std::swap;
+  swap(head_,list.head_);
+  swap(tail_,list.tail_);
+  swap(sz_,list.sz_);
+  return *this;
+}
+
+DLL::DLL(const DLL &list) {
+  for (Node *p = list.head_; p; p = p->next)
+    add_back(p->key, p->value);
+}
+
+DLL::DLL(vector<Node> vec) {
+  for (const auto &node : vec)
+    add_back(node.key, node.value);
+}
+
+/* BEGIN MODIFICATION BELOW */
+Node DLL::add_back(string str, int num) {
+    //adds a node to the list at the end
+    Node* n = new Node(str,num); //initialize a node
+    if (tail_==nullptr) {
+        //empty list situation
+        head_=n;
+        tail_=n;
+        sz_ += 1;
+    } else {
+        //anything else
+        tail_->next=n;
+        n->prev=get_tail();
+        tail_=n;
+        sz_ += 1;
+    }
+    return *n;
+}
+
+Node DLL::add_front(string str, int num) {
+    //adds a node to the front of the list
+    Node* n = new Node(str,num); //initialize a node
+    if (tail_==nullptr) {
+        //empty list situation
+        head_=n;
+        tail_=n;
+        sz_ += 1;
+    } else {
+        //anything else
+        head_->prev=n;
+        n->next=head_;
+        head_=n;
+        sz_ += 1;
+    }
+    return *n;
+}
+
+Node DLL::add_after(string add_key, string str, int num) {
+    //adds a node to a list after a specified node
+    Node* n = new Node("",0); //initialize a blank node
+    for (auto p=head_; p != nullptr; p=p->next) {
+        //loops through the list and checks if the key is present 
+        if (p->key==add_key) {
+            Node* m = new Node(str,num); //initialize a node
+            if (p==tail_) {
+                //situation for if the node is the tail
+                m->prev=p;
+                tail_=m;
+                tail_->prev=p;
+            } else if (p==head_) {
+                //situation for if node is the head
+                m->next=p->next;
+                m->prev=p;
+                p->next->prev=m;
+            } else {
+                //situation for somewhere in middle of list
+                p->next->prev=m;
+                m->prev=p;
+                m->next=p->next;
+            }
+            sz_ += 1;
+            p->next=m;
+            return *m;
+        }
+    }
+    return *n;
+}
+
+Node DLL::remove_back() {
+    //removes the last node in the list
+    Node* n = new Node("",0); //initialize a blank node
+    if (get_size()!=0 && get_size()!=1) {
+        //situations that have more than one node in the list
+        sz_ -= 1;
+        n = get_tail();
+        tail_=tail_->prev;
+    } else if (get_size()==1) {
+        //1 node in list
+        sz_ -= 1;
+        n = get_tail();
+        head_=nullptr;
+        tail_=nullptr;
+    }
+    return *n;
+}
+
+Node DLL::remove_front() {
+    //removes the node at the front of the list
+    Node* n = new Node("",0); //initialize a node
+    if (get_size()!=0 && get_size()!=1) {
+        //situations that have more than one node in the list
+        sz_ -= 1;
+        n = get_head();
+        head_=head_->next;
+    } else if (get_size()==1) {
+        //1 node in list
+        sz_ -= 1;
+        n = get_head();
+        head_=nullptr;
+        tail_=nullptr;
+    }
+    return *n;
+}
+
+Node DLL::remove_key(string to_remove) {
+    //removes a node specified by a key
+    Node* n = new Node("",0); //initialize a blank node
+    for (auto p=head_; p != nullptr; p=p->next) {
+        //loops through the list to see if the specified key is present
+        if (p->key==to_remove) {
+            if (p==head_) {
+                //situation if node is the head
+                head_=p->next;
+                p->next->prev=nullptr;
+            } else if (p==tail_) {
+                //situation if node is the tail
+                tail_=p->prev;
+                p->prev->next=nullptr;
+            } else {
+                //situation if key is not head or tail
+                p->prev->next=p->next;
+                p->next->prev=p->prev;
+            }
+            sz_ -= 1;
+            Node* m = p;
+            return *m;
+        }
+    }
+    return *n;
+}
+
+Node DLL::search(string find_key) {
+    //searches through the list for a specific key
+    for (auto p=head_; p != nullptr; p=p->next) {
+        if (p->key == find_key) {
+            return *p;
+        }
+    }
+    return Node("",0); //return blank node if key is not found
+}
+
+int DLL::update_value(string find_key, int new_value) {
+    //updates the value of a node if the specified key is found
+    for (auto p=head_; p != nullptr; p=p->next) {
+        //loops through the list to see if the key is present
+        if (p->key==find_key) {
+            p->value=new_value;
+            if (p==tail_) {
+                //situation if node is the tail
+                p->prev->next=p;
+            } else if (p==head_) {
+                //situation if the node is the head
+                p->next->prev=p;
+            } else {
+                //situation if p is in between head and tail
+                p->prev->next=p;
+                p->next->prev=p;
+            }
+            return new_value;
+        }
+    }
+    return -1; //returns -1 if node is not present
+}
+
+#endif
