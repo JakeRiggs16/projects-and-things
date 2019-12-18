@@ -1,0 +1,405 @@
+'''
+
+ Project - CONNECT4
+ 
+ Plays out a CONNECT4 game.
+ Combines 7 functions to play.
+ Initialize function-makes a blank board
+ Choose_color-Prompts for picking colors for the player and opponent
+ Board_display-Prints the board
+ Drop_disc-Drops the disc into the board, dropping into the lowest open slot
+ Check_disc-Test to see if there are any winning sequences.
+ Is_game_over-Goes through each combination of sequences from check_disc to 
+     see if the game is over.
+     
+'''
+pieces = {'black':'b', 'white':'w'}
+COLUMN = 7
+ROW = 6
+
+def initialize():
+    '''
+    Initializes the rows of the board to be all empty, returns the board.
+    '''
+    board=[]    #initializes blank list
+    row0=[0,0,0,0,0,0,0]    #assigns row lists
+    row1=[0,0,0,0,0,0,0]
+    row2=[0,0,0,0,0,0,0]
+    row3=[0,0,0,0,0,0,0]
+    row4=[0,0,0,0,0,0,0]
+    row5=[0,0,0,0,0,0,0]
+    board.append(row0)  #appends each row to board list
+    board.append(row1)
+    board.append(row2)
+    board.append(row3)
+    board.append(row4)
+    board.append(row5)
+    
+    return board     #returns board
+
+    pass
+
+def choose_color():
+    '''
+    Prompts the users to pick which color they want to be, returns the
+    player's color and the opponent's color.
+    '''
+    choice=input('Pick a color: ')  #prompts for a color
+    if choice.lower() == 'black':   #assigns player to black and oppon to white
+        player_color='black'
+        opponent_color='white'
+        print("You are 'black' and your opponent is 'white'.")
+        return player_color,opponent_color #returns colors of each player
+    elif choice.lower() == 'white': #assigns player to white and oppon to black
+        player_color='white'
+        opponent_color='black'
+        print("You are 'white' and your opponent is 'black'.")
+        return player_color,opponent_color  #returns colors of each player
+    else:
+        print("Wrong color; enter only 'black' or 'white', try again.")
+        choice=input('Pick a color: ')  #prompts again for color, error checker
+        if choice.lower() == 'black':#assigns player to black and oppon to white
+            player_color='black'
+            opponent_color='white'
+            print("You are 'black' and your opponent is 'white'.")
+            return player_color,opponent_color   #returns colors of each player
+        elif choice.lower() == 'white':#assigns player to white and oppon to black
+            player_color='white'
+            opponent_color='black'
+            print("You are 'white' and your opponent is 'black'.")
+            return player_color,opponent_color
+    pass
+
+def board_display(board):
+    '''
+    Displays the current board after each turn. Takes the board as a parameter.
+    '''
+    print("Current board:")
+    C = COLUMN
+    R = ROW
+    hline = '\n' + (' ' * 2) + ('+---' * C) + '+' + '\n'
+    numline = ' '.join([(' ' + str(i) + ' ') \
+                        for i in range(1, C + 1)])
+    str_ = (' ' * 3) + numline + hline
+    for r in range(0, R):
+        str_ += str(r+1) + ' |'
+        for c in range(0, C):
+            str_ += ' ' + \
+                (str(board[r][c]) \
+                     if board[r][c] is not 0 else ' ') + ' |'
+        str_ += hline
+    print (str_)
+
+def drop_disc(board, column, color): 
+    '''
+    Tries to drop a disc into the board, going from bottom row to top in
+    the specified column. Returns full if this column does not work, and
+    returns the modified board if it works.
+    '''
+    n=6
+    try:    #tries to drop a disc
+        column=int(column)
+        if column >= 8 or column < 1:   #starts by making sure a valid input
+            return None
+        elif board[n-1][column-1]==0:   #tries bottom slot
+            board[n-1][column-1]=color[0]
+            return n
+        elif board[n-2][column-1]==0:   #next slot up
+            board[n-2][column-1]=color[0]
+            return n-1
+        elif board[n-3][column-1]==0:   #next slot up
+            board[n-3][column-1]=color[0]
+            return n-2
+        elif board[n-4][column-1]==0:   #next slot up
+            board[n-4][column-1]=color[0]
+            return n-3
+        elif board[n-5][column-1]==0:   #next slot up
+            board[n-5][column-1]=color[0]
+            return n-4
+        elif board[n-6][column-1]==0:   #next slot up
+            board[n-6][column-1]=color[0]
+            return n-5
+        elif board[5][column-1]=='b' or board[5][column-1]=='w':
+            return 'full'    #returns full if column is full
+    except:
+        return None
+    pass
+
+def check_disc(board, row, column):
+    '''
+    Checks the board to see if there is a winning sequence.
+    '''
+    win= ""
+    row2=int(row)    #makes row an integer
+    column2=int(column)  #makes column an integer
+    row=int(row)-1
+    column=int(column)-1    #integer
+    r=row2-1    #initialize
+    c=column2-1
+    count=0
+    count2=0
+    inrow=False
+    incolumn=False
+    color=board[r][c]    #assigns color to the color of the specific slot
+    
+    if c < 0 or c > 9 or r < 0 or c > 8:    #invalid option
+        return None
+    
+     #diagonal tests
+    
+    try:
+       win += str(board[row][column])    #adds letter of color to string win
+       win += str(board[row+1][column-1])
+       win += str(board[row+2][column-2])
+       win += str(board[row+3][column-3])
+       if win == "wwww":
+           return True
+       if win == "bbbb":    #if there's four in a row, return true
+           return True
+       else:
+           win = ""
+    except IndexError:
+        win = ""
+    try:
+        win += str(board[row-1][column+1])   #adds letter of color to string win
+        win += str(board[row][column])
+        win += str(board[row+1][column-1])
+        win += str(board[row+2][column-2])
+        if win == "wwww":
+            return True
+        if win == "bbbb":   #if there's four in a row, return true
+            return True
+        else:
+            win = ""
+    except IndexError:
+        win = ""
+    try:
+        win += str(board[row-2][column+2])   #adds letter of color to string win
+        win += str(board[row-1][column+1])
+        win += str(board[row][column])
+        win += str(board[row+1][column-1])
+        if win == "wwww":
+            return True
+        if win == "bbbb":   #if there's four in a row, return true
+            return True
+        else:
+            win = ""
+    except IndexError:
+        win = ""
+    try:
+        win += str(board[row-3][column+3])   #adds letter of color to string win
+        win += str(board[row-2][column+2])
+        win += str(board[row-1][column+1])
+        win += str(board[row][column])
+        if win == "wwww":
+            return True
+        if win == "bbbb":   #if there's four in a row, return true
+            return True
+        else:
+            win = ""
+    except IndexError:
+        win = ""
+    try:
+        win += str(board[row][column])   #adds letter of color to string win
+        win += str(board[row+1][column+1])
+        win += str(board[row+2][column+2])
+        win += str(board[row+3][column+3])
+        if win == "wwww":
+            return True
+        if win == "bbbb":   #if there's four in a row, return true
+            return True
+        else:
+            win = ""
+    except IndexError:
+        win = ""
+    try:
+        win += str(board[row-1][column-1])   #adds letter of color to string win
+        win += str(board[row][column])
+        win += str(board[row+1][column+1])
+        win += str(board[row+2][column+2])
+        if win == "wwww":
+            return True
+        if win == "bbbb":   #if there's four in a row, return true
+            return True
+        else:
+            win = ""
+    except IndexError:
+        win = ""
+    try:
+        win += str(board[row-2][column-2])   #adds letter of color to string win
+        win += str(board[row-1][column-1])
+        win += str(board[row][column])
+        win += str(board[row+1][column+1])
+        if win == "wwww":
+            return True
+        if win == "bbbb":   #if there's four in a row, return true
+            return True
+        else:
+            win = ""
+    except IndexError:
+        win = ""
+    try:
+        win += str(board[row-3][column-3])   #adds letter of color to string win
+        win += str(board[row-2][column-2])
+        win += str(board[row-1][column-1])
+        win += str(board[row][column])
+        if win == "wwww":
+            return True
+        if win == "bbbb":   #if there's four in a row, return true
+            return True
+        else:
+            win = ""
+            
+    except IndexError:
+        if win != "wwww":
+            return False
+        if win != "bbbb":
+            return False
+    try:
+        for i in range(COLUMN):  #loop for checking rows
+            if board[r][i]==color and color!=0:
+                count+=1
+                if i==c:
+                    inrow=True
+                    
+                if count==4 and inrow==True:
+                    return True
+            else:
+                count=0   
+        for x in range(ROW):  #loop for checking columns
+            if board[x][c]==color and color!=0:
+                count2+=1
+                if x==r:
+                    incolumn=True
+                if count2==4 and incolumn==True:
+                    return True 
+            else:
+                count2=0
+    except IndexError:
+        return False
+    if win != "wwww":   #continues the game
+        return False
+    if win != "bbbb":   #continues the game
+        return False
+    return False
+    
+   
+def is_game_over(board):
+    '''
+    Checks to see if the game is over, takes the whole board as a parameter.
+    '''
+    for row in range(1,7):  #loops through each row
+        for column in range(1,8):   #loops inside for each column
+            if check_disc(board,row,column) != True:    #continues if game is not over
+                	continue
+            else: 
+                if board[row-1][column-1] == 'b':   #returns white as winner
+                    return "black"
+                if board[row-1][column-1] == 'w':   #returns black as winner
+                    return "white"
+    if check_disc(board,row,column) == False and 0 not in board[0] and 0 not in board[1] and 0 not in board[2] and 0 not in board[3] and 0 not in board[4] and 0 not in board[5]:
+        return 'draw'     #if board is full and no winner, return draw
+    return None
+    pass
+
+
+def main():
+    '''
+    The main function that contains all the other functions.
+    '''
+    banner = """
+       ____ ___  _   _ _   _ _____ ____ _____ _  _   
+      / ___/ _ \| \ | | \ | | ____/ ___|_   _| || |  
+     | |  | | | |  \| |  \| |  _|| |     | | | || |_ 
+     | |__| |_| | |\  | |\  | |__| |___  | | |__   _|
+      \____\___/|_| \_|_| \_|_____\____| |_|    |_|  
+    """
+    intro = """
+    Connect Four is a two-player connection game in which the players first choose a color and \
+    then take turns dropping one colored disc from the top into a seven-column, six-row vertically suspended grid. \
+    The pieces fall straight down, occupying the lowest available space within the column. \
+    The objective of the game is to be the first to form a horizontal, vertical, or diagonal line of four of one's own discs. 
+    """
+    usage = """
+        Usage:
+            pass:   give up, admit defeat
+            exit:   exit the game
+            i:      drop a disk into column i
+    """
+    print(banner)
+    print(intro)
+    print(usage)
+     
+    continue_game = 'yes'  # can't use "continue" because it has a special meaning
+    board=initialize()
+    change=0
+    column=''
+    while continue_game.lower() == 'yes':
+        player,opponent=choose_color()
+        board_display(board)
+        while column!='exit' and column!='pass':
+            if change%2==0:
+                column=input("{}'s turn :> ".format(player))
+                if column=='pass':
+                    print("{} gave up! {} is the winner!! yay!!!".format(player,opponent))
+                    break
+                elif column=='exit':
+                    print("\nThanks for playing! See you again soon!")
+                    break
+                dropped=drop_disc(board, column, player)
+                if dropped==None and column=='hi':
+                    print("Invalid option")
+                    print(usage)
+                    continue
+                elif dropped=='full':
+                    print("This column is full. Please try again.")
+                    continue
+                elif dropped==None:
+                    print("Invalid column: 1 <= column <= 7. Please try again.")
+                    continue
+                else:
+                    board_display(board)
+                    checked=check_disc(board, dropped, column)
+                    change+=1
+                    if checked==True:
+                        print("{} wins!".format(player))
+                        column='pass'
+                        
+            else:
+                column=input("{}'s turn :> ".format(opponent))
+                if column=='pass':
+                    print("{} gave up! {} is the winner!! yay!!!".format(opponent,player))
+                    break
+                elif column=='exit':
+                    print("\nThanks for playing! See you again soon!")
+                    break
+                dropped=drop_disc(board, column, opponent)
+                if dropped==None and column=='hi':
+                    print("Invalid option")
+                    print(usage)
+                    continue
+                elif dropped=='full':
+                    print("This column is full. Please try again.")
+                    continue
+                elif dropped==None:
+                    print("Invalid column: 1 <= column <= 7. Please try again.")
+                    continue
+                else:
+                    board_display(board)
+                    checked=check_disc(board, dropped, column)
+                    change+=1
+                    if checked==True:
+                        print("{} wins!".format(opponent))
+                        column='pass'
+                        
+        if column=='pass':
+            continue_game=input("Would you like to play again? ")
+            column=''
+            board=initialize()
+        if column=='exit':
+            break
+    if continue_game.lower()=='no' and column=='':
+        print("\nThanks for playing! See you again soon!")
+    
+if __name__ == "__main__":
+    main()
