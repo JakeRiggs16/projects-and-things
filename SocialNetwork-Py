@@ -1,0 +1,256 @@
+'''
+    Project - EgoNet Social Network
+    
+    Class file used for this program is "EgoNet-Class-For-SocialNetwork-Py"
+    
+    This program builds an EgoNet using an object oriented paradigm.
+    Uses 5 different classes to build the program.
+    EgoNet class is used for the most part, and calls other classes inside it.
+    Process is opening files, letting the user decide what they want to calculate
+    from the options provided, and then calculating the specific statistic they
+    want to see. 
+'''
+
+from EgoNet import EgoNet
+from Node import Node
+from Feature import Feature
+from Circle import Circle
+from operator import itemgetter
+
+def get_ego_net_files():
+    '''
+        Opens each of the files. Returns the file pointer if the files are found.
+    '''
+    y1 = "_ego_features.txt"
+    y2 = "_ego_net_features.txt"
+    y3 = "_alters_features.txt"
+    y4 = "_ego_net_connections.txt"
+    y5 = "_circles.txt"
+    x = input("Enter user id to generate EgoNet: ")
+    while True:
+        try:
+            fp1 = open(x+y1)
+            fp2 = open(x+y2)
+            fp3 = open(x+y3)
+            fp4 = open(x+y4)
+            fp5 = open(x+y5)
+
+            return (int(x),fp1,fp2,fp3,fp4,fp5)
+
+        except FileNotFoundError:
+            print("File not found for ego_id: ",x)
+            x = input("Enter user id to generate EgoNet: ")
+
+def get_ego_net_features(fp):
+    '''
+        Reads the features file and returns a dictionary made from the feature
+        name and feature id found in the file, with the feature position as the 
+        key. Returns the dictionary.
+    '''
+    net_features_dict=dict()    #initialize
+    for line in fp:     #loop through file
+        line=line.split()   
+        feature_pos=int(line[0])    #get position
+        feature=line[1].split(';')
+        feature_list=[feature[0],feature[1]]    #list
+        if feature[1]!='anonymized':
+            feature='_'.join(feature_list)  #join names
+        else:
+            feature=feature[0]
+        feature_id=line[3]  #gets id
+        net_features_dict[feature_pos]=(feature,feature_id) #adds to dict
+    return net_features_dict
+
+def add_ego_net_features_to_ego(ego, ego_feature_file, ego_net_features):
+    '''Reads a one-line file of features for the ego node'''
+    line_list = ego_feature_file.readline().split()    # read one line
+    # i is the index, digit is the value
+    for i,digit in enumerate(line_list):
+        # in order to add a feature we must create a Feature instance
+        ego.add_feature(i,Feature(ego_net_features[i][1], ego_net_features[i][0],int(digit)))
+    return ego
+
+def add_alters_to_ego_net(ego_net,alter_features_file,ego_net_features):
+    '''
+        Loops through alter features file to create a node object and add to the
+        ego_net. Adds the feature to the alter. Returns the updated ego_net.
+    '''
+    for line in alter_features_file:    #loops through file
+        line=line.split()
+        features=line[1:]   #lists features
+        alter=Node(int(line[0]),len(features))  #creates node object
+        ego_net.add_alter_node(alter)   #add alter
+        # i is the index, digit is the value
+        for i,digit in enumerate(features):
+            # in order to add a feature we must create a Feature instance
+            alter.add_feature(i,Feature(ego_net_features[i][1], ego_net_features[i][0],int(digit)))
+    return ego_net
+
+
+def add_connections_to_ego_net(ego_net,connections_file):
+    '''
+        Loops through connections file to get two nodes and add them to ego_net.
+        Returns updated ego_net.
+    '''
+    for line in connections_file:   #loops through connections file
+        line=line.split()
+        alter1=EgoNet.get_alter_node(ego_net,int(line[0]))  #get node object
+        alter2=EgoNet.get_alter_node(ego_net,int(line[1]))
+        ego_net.add_connection_between_alters(alter1,alter2)    #add connection
+    return ego_net
+
+
+def add_circles_to_ego_net(ego_net,circles_file):
+    '''
+        Loops through circles file and adds circles to the ego_net. Returns
+        the updated ego_net.
+    '''
+    for line in circles_file:   #loops through file
+        line=line.split()
+        node_set=set()  #initialize
+        circle_name=line[0] #assign name to variable
+        line.pop(0) #get rid of name
+        for i in line:  #loop through alters in cirle
+            alters=EgoNet.get_alter_node(ego_net,int(i))    #get node object
+            node_set.add(alters)    #add node to set
+        EgoNet.add_circle(ego_net,circle_name,node_set) #add circle to ego_net
+    return ego_net
+
+def calculate_circle_similarity(ego_net,circle_name):
+    '''
+        Calculate similarities of alters in a circle. Returns circle similarity
+        dictionary.
+    '''
+    circle_similarity=dict()    #initialize
+    features_dict=ego_net.get_ego_net_features() #get features
+    circ=ego_net.get_circle(circle_name)
+    
+    for k in features_dict.keys():  #loop through features
+        circle_similarity[k]=0  #add to dict
+        for i in circ.get_alters():        #loop through alters
+            if k not in circle_similarity.keys():
+                circle_similarity[k]=0
+            val=i.get_feature_value(k)
+            circle_similarity[k]+=int(val)  #add to value of position
+    return circle_similarity
+
+def calculate_ego_E_I_index(ego_net,feature_name,feature_id):
+    '''
+        Calculates E-I index of ego_net of given feature. Returns the E-I index.
+    '''
+    E=0 #initialize
+    I=0 #initialize
+    alters=ego_net.get_alters() #get alters
+    for alter in alters:    #loop through alters
+        feat_pos=ego_net.get_feature_pos(feature_name,feature_id)   #position
+        feat_val=alter.get_feature_value(feat_pos)  #feature value
+        if feat_val!=1: #if feature add
+            E+=1
+        else:  #if feature add 
+            I+=1
+    E_I=((E-I)/(E+I))    #calculate
+    return E_I
+
+def calculate_ego_net_effective_size(ego_net):
+    '''
+        Calculates the effective size of the ego_net. Returns the effective size.
+    '''
+    count=EgoNet.get_alter_node_count(ego_net)  #total node count
+    alters=EgoNet.get_alters(ego_net)   #get all alters
+    total=0 #total size
+    for i in alters:    #loop through alters
+        connections=len(ego_net.get_alter_connections(i))-1 #num of connections
+        total+=connections    #add to total
+    effective_size=count-(total/count)  #calculate effective size
+    return effective_size
+
+def calculate_ego_net_efficiency(ego_net):
+    '''
+        Calculates the efficiency of the ego_net. Returns the efficiency.
+    '''
+    effective=calculate_ego_net_effective_size(ego_net) #effective size func
+    count=ego_net.get_alter_node_count()    #total node count
+    efficiency=effective/count     #calculate efficiency
+    return efficiency
+
+def print_choices():
+    '''
+        Prints starting choices when called. Returns nothing.
+    '''
+    print("Choices for Ego Net calculation: ")
+    print("1 - Top 5 similar features in a circle")
+    print("2 - Calculate effective size of Ego Net")
+    print("3 - Calculate circle E/I index")
+    print("4 - Calculate Ego Net efficiency")
+    print("q/Q - Quit ")
+
+def main():
+    '''
+        Runs the main function and calls all other functions. Properly prints
+        each of the results from the above functions. Returns nothing.
+    '''
+    ego_id,ego_feature_file,ego_net_features_file,alter_features_file,connections_file,circles_file=get_ego_net_files()
+    ego_net_features = get_ego_net_features(ego_net_features_file)
+
+    ego = Node(ego_id,len(ego_net_features))
+
+    ego = add_ego_net_features_to_ego(ego,ego_feature_file,ego_net_features)
+
+    FacebookNet = EgoNet(ego,ego_net_features)
+
+    FacebookNet = add_alters_to_ego_net(FacebookNet,alter_features_file,ego_net_features)
+
+    FacebookNet = add_connections_to_ego_net(FacebookNet,connections_file)
+
+    FacebookNet = add_circles_to_ego_net(FacebookNet,circles_file)
+
+    while True:
+        print_choices()
+        choice = input("Enter choice: ").strip()
+        circle_names = FacebookNet.get_circle_names()
+        if choice == "1":
+            circle_name = input("Enter circle name to calculate similarity: ")
+            circle_size = (FacebookNet.get_circle(circle_name).get_circle_size())
+            if circle_name in circle_names:
+                similarity_dict = calculate_circle_similarity(FacebookNet,circle_name)
+            else:
+                print("Circle name not in Ego Net's circles. Please try again!")
+                continue
+            similarity_dict = dict(sorted(similarity_dict.items(),key=itemgetter(1),reverse=True)[:5])
+            for feature_pos in similarity_dict:
+                feature_name_id = FacebookNet.get_ego_net_feature(feature_pos)
+                feature_similarity = (similarity_dict[feature_pos])/(circle_size)
+                print(f"Feature: {feature_name_id}")
+                print(f"Feature Similarity in {circle_name}: {feature_similarity} \n")
+            print()
+        elif choice == '2':
+            print(f"Effective size of the Ego Net is: {calculate_ego_net_effective_size(FacebookNet)}")
+            print()
+        elif choice == '3':
+            feature_name = input("Enter feature name to calculate E/I index: ")
+            feature_id = (input(f"Enter id for {feature_name} to calculate E/I index: "))
+            e_i_index = calculate_ego_E_I_index(FacebookNet,feature_name,feature_id)
+            if e_i_index < 0:
+                print(f"Ego is more homophilic for {feature_name}_{feature_id} with an E/I index of {e_i_index}")
+                print()
+            else:
+                print(f"Ego is more heterophilic for {feature_name}_{feature_id} with an E/I index of {e_i_index}")
+                print()
+
+        elif choice == '4':
+            ego_net_efficiency = calculate_ego_net_efficiency(FacebookNet)
+            print("The efficiency of the Ego Net is: {:.2f}%".format(100*ego_net_efficiency))
+            print()
+
+        elif choice in 'qQ':
+            break
+        else:
+            print("Incorrect Choice. Please try again.")
+            continue
+    ego_feature_file.close()
+    ego_net_features_file.close()
+    alter_features_file.close()
+    connections_file.close()
+
+if __name__ == "__main__":
+   main()
